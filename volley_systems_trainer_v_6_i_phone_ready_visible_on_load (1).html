@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no" />
+<title>Volley Systems Trainer – 4‑2 · 5‑1 · 6‑2 (v6)</title>
+<style>
+  :root{--bg:#0f172a;--text:#e5e7eb}
+  html,body{margin:0;height:100%;background:radial-gradient(1200px 700px at 50% 0%, #0b1224, var(--bg));color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Helvetica,Arial;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  #wrap{display:grid;grid-template-rows:auto 1fr auto;min-height:100dvh}
+  header{display:flex;align-items:center;justify-content:space-between;padding:calc(.6rem + env(safe-area-inset-top)) .9rem .6rem;gap:.5rem;background:linear-gradient(180deg,#0f1a33,#0b1328 40%,transparent);position:sticky;top:0;z-index:5;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+  .title{font-weight:800}
+  .badge{font-size:.72rem;padding:.25rem .5rem;border-radius:999px;background:#0b213e;border:1px solid #143257;color:#93c5fd}
+  #hud{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+  .pill{background:#0b213e;border:1px solid #163658;border-radius:999px;padding:.45rem .7rem;display:flex;gap:.5rem;align-items:center;font-weight:600}
+  .pill .dot{width:.6rem;height:.6rem;border-radius:50%;background:#38bdf8;box-shadow:0 0 0 3px rgba(56,189,248,.15)}
+  .badgeHint{display:none;font-size:.72rem;padding:.2rem .45rem;border-radius:999px;background:#1e293b;border:1px solid #334155;color:#93c5fd;margin-left:.25rem}
+  .hintOn .badgeHint{display:inline-flex}
+  main#game{position:relative;display:grid;place-items:center;padding:.5rem .75rem 1rem;padding-bottom:calc(120px + env(safe-area-inset-bottom))}
+  canvas{width:min(100vw,850px);height:calc(min(100vw,850px)*1.6);max-height:82dvh;border-radius:16px;box-shadow:0 12px 36px rgba(0,0,0,.45);background:#0a1221;touch-action:none}
+  #controls{position:fixed;inset:auto 0 calc(.5rem + env(safe-area-inset-bottom)) 0;display:flex;justify-content:center;z-index:10;pointer-events:none}
+  .bar{display:flex;gap:.5rem;pointer-events:auto;padding:.5rem;border-radius:16px;background:rgba(6,12,24,.8);backdrop-filter:blur(8px) saturate(1.1);border:1px solid rgba(92,125,175,.22);box-shadow:0 12px 36px rgba(0,0,0,.35);flex-wrap:wrap;justify-content:center}
+  .btn{user-select:none;-webkit-tap-highlight-color:transparent;cursor:pointer;border:none;border-radius:12px;padding:.7rem .9rem;font-weight:800;letter-spacing:.3px;text-transform:uppercase;font-size:.85rem;background:linear-gradient(180deg,#0f233f,#0c1a2f);color:#e5f0ff;border:1px solid #1a355b;box-shadow:inset 0 1px 0 rgba(255,255,255,.05), 0 8px 18px rgba(0,0,0,.35)}
+  .btn:active{transform:translateY(1px) scale(.98)}
+  .btn.blue{background:linear-gradient(180deg,#1261a8,#0f4b82)}
+  .btn.green{background:linear-gradient(180deg,#12883a,#0f6b2e)}
+  .btn.amber{background:linear-gradient(180deg,#a86c12,#8b580f)}
+  .btn.indigo{background:linear-gradient(180deg,#3f40a6,#2e2f7c)}
+  #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(6.5rem + env(safe-area-inset-bottom));z-index:15;display:none;background:rgba(8,18,36,.95);border:1px solid rgba(120,170,255,.5);padding:.65rem 1rem;border-radius:10px;font-weight:700;box-shadow:0 10px 24px rgba(0,0,0,.42)}
+  #overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:20;background:radial-gradient(700px 300px at 50% 0%, rgba(8,14,30,.85), rgba(4,8,18,.95))}
+  body.modalOpen #controls{display:none}
+  .card{width:min(92vw,900px);max-height:86dvh;overflow:auto;background:#0b172e;border:1px solid #163b6b;border-radius:18px;padding:1rem 1.1rem;box-shadow:0 14px 44px rgba(0,0,0,.55)}
+  .card h2{margin:.2rem 0 .6rem;font-size:1.4rem}
+  .kbd{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;padding:.14rem .32rem;border-radius:6px;background:#0a172e;border:1px solid #213a63}
+  footer{text-align:center;font-size:.8rem;opacity:.95;padding:.6rem 0 1rem}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <header>
+    <div class="title">🏐 <b>Volley Systems Trainer</b> <span class="badge">4‑2 · 5‑1 · 6‑2</span></div>
+    <div id="hud">
+      <div class="pill"><span class="dot"></span><span id="score">Score 0</span></div>
+      <div class="pill"><span class="dot"></span><span id="level">Level 1</span></div>
+      <div class="pill"><span class="dot"></span><span id="systemLabel">System 5‑1</span><span class="badgeHint" id="hintBadge">HINT ON</span></div>
+    </div>
+  </header>
+  <main id="game">
+    <canvas id="cv" width="540" height="864" aria-label="Volleyball court" role="img"></canvas>
+    <div id="toast"></div>
+  </main>
+  <div id="controls" aria-label="Game controls">
+    <div class="bar" role="toolbar" aria-label="Trainer controls">
+      <button id="btnRotate" class="btn blue" title="Advance one rotation">Rotate</button>
+      <button id="btnConfirm" class="btn green" title="Check placement">Confirm</button>
+      <button id="btnHint" class="btn amber" aria-pressed="false" title="Toggle target ghosts">Hint</button>
+      <button id="btnSubs" class="btn" title="Manage substitutions">Subs</button>
+      <button id="btnHelp" class="btn" title="How to play">?</button>
+      <div role="group" aria-label="Choose system">
+        <button data-sys="5-1" class="btn indigo" title="Switch to 5-1">5‑1</button>
+        <button data-sys="4-2" class="btn indigo" title="Switch to 4-2">4‑2</button>
+        <button data-sys="6-2" class="btn indigo" title="Switch to 6-2">6‑2</button>
+      </div>
+      <div role="group" aria-label="Opponent system">
+        <button data-osys="5-1" class="btn indigo" title="Opponent 5-1">Opp 5‑1</button>
+        <button data-osys="4-2" class="btn indigo" title="Opponent 4-2">Opp 4‑2</button>
+        <button data-osys="6-2" class="btn indigo" title="Opponent 6-2">Opp 6‑2</button>
+        <button id="btnOppRotate" class="btn blue" title="Rotate opponent">Opp Rotate</button>
+      </div>
+    </div>
+  </div>
+  <footer>Tokens are visible immediately. <b>Rotate</b> scrambles your side; <b>Opp Rotate</b> scrambles the top side. <b>Hint</b> shows targets. <b>Subs</b> opens substitution rules. (Optimized for iPhone.)</footer>
+</div>
+
+<!-- Help Modal (starts hidden in v6 to avoid covering the court) -->
+<div id="overlay" aria-modal="true" role="dialog">
+  <div class="card">
+    <h2>How this trainer works</h2>
+    <p>Choose 5‑1 / 4‑2 / 6‑2 for each side. Tap <b>Rotate</b> (or <b>Opp Rotate</b>) to advance and scramble that side. Drag roles to correct bases, then <b>Confirm</b>. <b>Hint</b> shows faint target ghosts.
+    <br>Libero can only replace a Middle in the <i>back row</i>.</p>
+    <div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:.8rem">
+      <button id="btnCloseHelp" class="btn green">Got it</button>
+    </div>
+  </div>
+</div>
+
+<!-- Substitutions Modal -->
+<div id="subsModal" class="card" style="display:none; position:fixed; inset:auto 0 0 0; margin:auto; max-width:900px; z-index:25;">
+  <h2>Substitutions</h2>
+  <div style="display:flex; gap:.8rem; flex-wrap:wrap; align-items:center; margin:.4rem 0 .6rem">
+    <label><input type="radio" name="teamPick" value="us" checked> Our team</label>
+    <label><input type="radio" name="teamPick" value="opp"> Opponent</label>
+    <span id="subCounts" style="opacity:.85"></span>
+  </div>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:.8rem">
+    <div>
+      <div style="font-weight:700; margin-bottom:.3rem">On court (tap a role)</div>
+      <div id="onCourtList" style="display:flex; flex-wrap:wrap; gap:.4rem"></div>
+    </div>
+    <div>
+      <div style="font-weight:700; margin-bottom:.3rem">Bench (tap to sub in)</div>
+      <div id="benchList" style="display:flex; flex-wrap:wrap; gap:.4rem"></div>
+    </div>
+  </div>
+  <div style="display:flex; gap:.5rem; justify-content:flex-end; margin-top:.8rem">
+    <button id="btnCloseSubs" class="btn green">Done</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ===== Canvas sizing (iPhone-safe) =====
+  const dpr = Math.max(1, Math.min(2, window.devicePixelRatio||1));
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d', { alpha: true });
+  function fit(){
+    const cssW = Math.min(window.innerWidth, 850);
+    const cssH = cssW*1.6; // 540x864 logical portrait
+    cv.style.width = cssW+'px';
+    cv.style.height = Math.min(cssH, window.innerHeight*0.82)+'px';
+    const w=Math.floor(cssW*dpr), h=Math.floor(cssH*dpr);
+    cv.width=w; cv.height=h; ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  fit();
+  window.addEventListener('resize', fit, {passive:true});
+
+  // ===== Court geometry =====
+  const court = {x:20,y:60,w:500,h:720};
+  const zones = {
+    1:()=>P(court.x+court.w*0.77, court.y+court.h*0.85),
+    2:()=>P(court.x+court.w*0.50, court.y+court.h*0.85),
+    3:()=>P(court.x+court.w*0.23, court.y+court.h*0.85),
+    4:()=>P(court.x+court.w*0.23, court.y+court.h*0.62),
+    5:()=>P(court.x+court.w*0.50, court.y+court.h*0.62),
+    6:()=>P(court.x+court.w*0.77, court.y+court.h*0.62),
+  };
+  // Top-half coordinates for opponent (mirrored vertically)
+  const zonesTop = {
+    1:()=>P(court.x+court.w*0.77, court.y+court.h*0.15),
+    2:()=>P(court.x+court.w*0.50, court.y+court.h*0.15),
+    3:()=>P(court.x+court.w*0.23, court.y+court.h*0.15),
+    4:()=>P(court.x+court.w*0.23, court.y+court.h*0.38),
+    5:()=>P(court.x+court.w*0.50, court.y+court.h*0.38),
+    6:()=>P(court.x+court.w*0.77, court.y+court.h*0.38),
+  };
+  const R = 22; // token radius (mobile)
+  function P(x,y){return {x,y}}
+
+  // ===== UI refs =====
+  const scoreEl = document.getElementById('score');
+  const levelEl = document.getElementById('level');
+  const systemEl = document.getElementById('systemLabel');
+  const toastEl = document.getElementById('toast');
+  const overlay = document.getElementById('overlay');
+  const btnRotate = document.getElementById('btnRotate');
+  const btnConfirm = document.getElementById('btnConfirm');
+  const btnHint = document.getElementById('btnHint');
+  const hintBadge = document.getElementById('hintBadge');
+  const btnHelp = document.getElementById('btnHelp');
+  const btnCloseHelp = document.getElementById('btnCloseHelp');
+  const btnReset = null; // not used in v6
+  const btnSubs = document.getElementById('btnSubs');
+  const subsModal = document.getElementById('subsModal');
+  const onCourtList = document.getElementById('onCourtList');
+  const benchList = document.getElementById('benchList');
+  const subCountsEl = document.getElementById('subCounts');
+  const btnOppRotate = document.getElementById('btnOppRotate');
+  document.querySelectorAll('[data-sys]').forEach(b=> b.addEventListener('click', ()=> setSystem(b.dataset.sys)));
+  document.querySelectorAll('[data-osys]').forEach(b=> b.addEventListener('click', ()=> setOppSystem(b.dataset.osys)));
+
+  // ===== Game state =====
+  let score=0, level=1, rotationTimer=14000, rotationQueued=false, rotationDeadline=0, hintOn=false;
+  let system='5-1';
+  let layouts = buildLayouts(system);
+  let rotIdx=0;
+  let layout = scrambledFrom(layouts[rotIdx]); // visible & shuffled on load
+
+  // opponent side
+  let oppSystem='5-1';
+  let oppLayouts = buildLayouts(oppSystem);
+  let oppRotIdx=0;
+  let oppLayout = scrambledFrom(oppLayouts[oppRotIdx]);
+
+  // benches & sub counts (simple demo roles)
+  let benchUs = ['L','DS','OH3'];
+  let benchOpp = ['L','DS','OH3'];
+  let subCountUs = 0, subCountOpp = 0;
+
+  // ===== Systems =====
+  function buildLayouts(sys){
+    const baseBySystem={
+      '5-1':[ {1:'S',2:'OH1',3:'MB2',4:'OH2',5:'OPP',6:'MB1'} ],
+      '4-2':[ {1:'S2',2:'OH1',3:'MB2',4:'OH2',5:'S1', 6:'MB1'} ],
+      '6-2':[ {1:'S2',2:'OH1',3:'MB2',4:'OH2',5:'S1', 6:'MB1'} ],
+    };
+    const start = baseBySystem[sys][0];
+    const arr=[]; let cur=start;
+    for(let i=0;i<6;i++){
+      let use={...cur};
+      if(sys==='5-1'){
+      // Libero replaces the single middle who is in the BACK ROW (zones 1,5,6)
+      for(const z of [1,5,6]){ if(use[z]==='MB1'||use[z]==='MB2'){ use[z]='L'; break; } }
+    }
+      arr.push(use); cur=rot(cur);
+    }
+    return arr;
+  }
+  function rot(m){return {1:m[2],2:m[3],3:m[4],4:m[5],5:m[6],6:m[1]}};
+  function clone(o){return JSON.parse(JSON.stringify(o))}
+  function scrambledFrom(target){
+    const zs=[1,2,3,4,5,6]; const roles=zs.map(z=>target[z]);
+    for(let t=0;t<12;t++){ for(let i=roles.length-1;i>0;i--){ const j=(Math.random()*(i+1))|0; [roles[i],roles[j]]=[roles[j],roles[i]]; } if(!roles.every((r,i)=>r===target[zs[i]])) break; }
+    const out={}; for(let i=0;i<6;i++){ out[zs[i]]=roles[i]; } return out;
+  }
+
+  function setSystem(sys){
+    system=sys; systemEl.textContent = `System ${sys}`;
+    layouts = buildLayouts(sys); rotIdx=0; layout = scrambledFrom(layouts[rotIdx]);
+    score=0; level=1; rotationTimer=14000; rotationQueued=false; hintOn=false;
+    document.getElementById('wrap').classList.remove('hintOn');
+    hintBadge.style.display='none'; btnHint.setAttribute('aria-pressed','false');
+    updateHUD(); toast(`System ${sys}`);
+  }
+  function setOppSystem(sys){ oppSystem=sys; oppLayouts = buildLayouts(sys); oppRotIdx=0; oppLayout = scrambledFrom(oppLayouts[oppRotIdx]); toast(`Opponent: ${sys}`); }
+
+  // ===== Input (drag) =====
+  const pointer={x:0,y:0,id:null,drag:null,offset:{x:0,y:0}};
+  cv.addEventListener('pointerdown',down,{passive:false});
+  window.addEventListener('pointermove',move,{passive:false});
+  window.addEventListener('pointerup',up,{passive:true});
+  window.addEventListener('pointercancel',up,{passive:true});
+  function hitToken(x,y){ for(let z=1;z<=6;z++){ const p=zones[z](); if(dist(x,y,p.x,p.y)<=R*1.2) return {z,role:layout[z]}; } return null; }
+  function down(e){ const r=cv.getBoundingClientRect(); pointer.x=(e.clientX-r.left)*(cv.width/r.width)/dpr; pointer.y=(e.clientY-r.top)*(cv.height/r.height)/dpr; pointer.id=e.pointerId; const h=hitToken(pointer.x,pointer.y); if(h){ pointer.drag=h; const p=zones[h.z](); pointer.offset.x=p.x-pointer.x; pointer.offset.y=p.y-pointer.y; e.preventDefault(); } }
+  function move(e){ if(pointer.id!==e.pointerId||!pointer.drag) return; const r=cv.getBoundingClientRect(); pointer.x=(e.clientX-r.left)*(cv.width/r.width)/dpr; pointer.y=(e.clientY-r.top)*(cv.height/r.height)/dpr; e.preventDefault(); }
+  function up(e){ if(pointer.id!==e.pointerId) return; if(pointer.drag){ const targetZ=nearest(pointer.x+pointer.offset.x, pointer.y+pointer.offset.y); const fromZ=pointer.drag.z; if(targetZ!==fromZ){ const a=layout[fromZ], b=layout[targetZ]; layout[fromZ]=b; layout[targetZ]=a; } } pointer.drag=null; pointer.id=null; }
+  function nearest(x,y){ let bestZ=1,bestD=1e9; for(let z=1;z<=6;z++){ const p=zones[z](); const d=dist(x,y,p.x,p.y); if(d<bestD){bestD=d;bestZ=z;} } return bestZ; }
+  function dist(x1,y1,x2,y2){ const dx=x1-x2, dy=y1-y2; return Math.hypot(dx,dy); }
+
+  // ===== Buttons =====
+  btnRotate.addEventListener('click',()=>{ if(rotationQueued) return; rotationQueued=true; rotationDeadline=performance.now()+rotationTimer; layout = scrambledFrom(layouts[rotIdx]); toast('Fix the rotation, then Confirm'); });
+  btnConfirm.addEventListener('click',()=>{ if(!rotationQueued){ toast('Tap Rotate first'); return; } const target=layouts[rotIdx]; const ok=eq(layout, target); if(ok){ score++; beepOK(); toast('Correct +1'); level++; rotationTimer=Math.max(4400, Math.floor(rotationTimer*0.92)); rotIdx=(rotIdx+1)%6; layout = scrambledFrom(layouts[rotIdx]); } else { score--; beepBad(); toast('Not quite −1'); }
+    rotationQueued=false; updateHUD(); });
+  btnHint.addEventListener('click',()=>{ hintOn=!hintOn; document.getElementById('wrap').classList.toggle('hintOn',hintOn); btnHint.setAttribute('aria-pressed', String(hintOn)); hintBadge.style.display=hintOn?'inline-flex':'none'; toast(hintOn?'Hints on':'Hints off'); });
+  btnHelp.addEventListener('click',()=>{ overlay.style.display='flex'; document.body.classList.add('modalOpen'); });
+  document.getElementById('btnCloseHelp').addEventListener('click',()=>{ overlay.style.display='none'; document.body.classList.remove('modalOpen'); });
+  btnSubs.addEventListener('click',()=>{ openSubs('us'); });
+  btnOppRotate.addEventListener('click', ()=>{ oppRotIdx=(oppRotIdx+1)%6; oppLayout = scrambledFrom(oppLayouts[oppRotIdx]); toast('Opponent rotated'); });
+
+  function eq(a,b){ for(let z=1;z<=6;z++){ if(a[z]!==b[z]) return false; } return true; }
+
+  // ===== Drawing =====
+  function courtDraw(){
+    rr(court.x-8,court.y-8,court.w+16,court.h+16,16,'#071123','#192b4a');
+    rr(court.x,court.y,court.w,court.h,12,'#143259','#23518e');
+    // top = opponent, bottom = ours
+    fill(court.x,court.y,court.w,court.h/2,'#0f2f5c');
+    fill(court.x,court.y+court.h/2,court.w,court.h/2,'#1b3f78');
+    line(court.x, court.y+court.h*0.25, court.x+court.w, court.y+court.h*0.25, '#9fc5ffaa',2);
+    line(court.x, court.y+court.h*0.75, court.x+court.w, court.y+court.h*0.75, '#9fc5ffaa',2);
+    line(court.x, court.y+court.h/2, court.x+court.w, court.y+court.h/2, '#ffffff',3.2);
+  }
+  function draw(){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    courtDraw();
+    // hint ghosts (ours only)
+    if(hintOn){ const t=layouts[rotIdx]; for(let z=1;z<=6;z++){ const p=zones[z](); ghost(p.x,p.y,t[z]); } }
+    // opponent tokens (top)
+    for(let z=1;z<=6;z++){
+      const pT = zonesTop[z]();
+      const roleO = oppLayout[z];
+      const cO = roleColor(roleO);
+      token(pT.x,pT.y, roleO, cO.fill, cO.stroke);
+    }
+    // our tokens (bottom)
+    for(let z=1;z<=6;z++){
+      let p=zones[z](); if(pointer.drag && pointer.drag.z===z){ p={x:pointer.x+pointer.offset.x,y:pointer.y+pointer.offset.y}; }
+      const role=layout[z]; const c=roleColor(role);
+      token(p.x,p.y, role, c.fill, c.stroke);
+    }
+    // countdown ring
+    if(rotationQueued){ const left=Math.max(0,rotationDeadline-performance.now()); const pct=left/rotationTimer; ring(court.x+court.w-44,court.y+court.h-44,22,'#93c5fd',pct); if(left<=0){ rotationQueued=false; score--; beepBad(); toast('Timeout −1'); updateHUD(); } }
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+
+  function roleColor(role){
+    if(role==='S'||role==='S1'||role==='S2') return {fill:'#38bdf8',stroke:'#115e7b'};
+    if(role==='OPP') return {fill:'#6366f1',stroke:'#2f327a'};
+    if(role==='L') return {fill:'#ef4444',stroke:'#7a1620'};
+    if(role.startsWith('OH')) return {fill:'#22c55e',stroke:'#0f6b2e'};
+    if(role.startsWith('MB')) return {fill:'#f59e0b',stroke:'#7c3d0a'};
+    return {fill:'#e5e7eb',stroke:'#64748b'};
+  }
+  function token(x,y,label,fillC,strokeC){ glow(x,y,20,fillC); ctx.beginPath(); ctx.arc(x,y,R,0,Math.PI*2); ctx.fillStyle=fillC; ctx.fill(); ctx.lineWidth=4; ctx.strokeStyle=strokeC; ctx.stroke(); ctx.fillStyle='#07111f'; ctx.font='bold 16px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(label,x,y); }
+  function ghost(x,y,text){ ctx.save(); ctx.globalAlpha=.24; ctx.beginPath(); ctx.arc(x,y,R,0,Math.PI*2); ctx.fillStyle='#e5f0ff'; ctx.fill(); ctx.globalAlpha=.9; ctx.fillStyle='#07111f'; ctx.font='bold 14px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(text,x,y); ctx.restore(); }
+  function ring(x,y,r,color,pct){ ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.strokeStyle='#0a1a33'; ctx.lineWidth=6; ctx.stroke(); ctx.beginPath(); ctx.arc(x,y,r,-Math.PI/2,-Math.PI/2+Math.PI*2*pct); ctx.strokeStyle=color; ctx.lineWidth=6; ctx.stroke(); }
+  function glow(x,y,r,color){ const g=ctx.createRadialGradient(x,y,2,x,y,r*2); g.addColorStop(0,color+'33'); g.addColorStop(1,'transparent'); ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,r*2.1,0,Math.PI*2); ctx.fill(); }
+  function rr(x,y,w,h,r,fillC,strokeC){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); if(fillC){ ctx.fillStyle=fillC; ctx.fill(); } if(strokeC){ ctx.strokeStyle=strokeC; ctx.lineWidth=2; ctx.stroke(); } }
+  function line(x1,y1,x2,y2,c,w){ ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.strokeStyle=c; ctx.lineWidth=w||1; ctx.stroke(); }
+  function fill(x,y,w,h,c){ ctx.fillStyle=c; ctx.fillRect(x,y,w,h); }
+
+  // ===== SFX =====
+  const ac = new (window.AudioContext||window.webkitAudioContext)();
+  function beepOK(){ beep(300,520); }
+  function beepBad(){ beep(160,120); }
+  function beep(a,b){ const t0=ac.currentTime; const o=ac.createOscillator(); const g=ac.createGain(); o.type='sine'; o.connect(g).connect(ac.destination); g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(0.05,t0+0.02); g.gain.exponentialRampToValueAtTime(0.00001,t0+0.22); o.frequency.setValueAtTime(a,t0); o.frequency.linearRampToValueAtTime(b,t0+0.2); o.start(t0); o.stop(t0+0.25); }
+
+  // ===== Subs UI =====
+  function openSubs(which){ subsModal.style.display='block'; document.body.classList.add('modalOpen'); renderSubs(which); }
+  function closeSubs(){ subsModal.style.display='none'; document.body.classList.remove('modalOpen'); }
+  document.getElementById('btnCloseSubs').addEventListener('click', closeSubs);
+  document.getElementsByName('teamPick').forEach(r=> r.addEventListener('change', ()=> renderSubs(getTeamPick())));
+  function getTeamPick(){ return document.querySelector('input[name="teamPick"]:checked').value; }
+  function chip(text, onclick){ const b=document.createElement('button'); b.textContent=text; b.className='btn'; b.style.fontSize='.8rem'; b.style.padding='.45rem .6rem'; b.onclick=onclick; return b; }
+  function renderSubs(which){ const isUs = (which||getTeamPick())==='us'; subCountsEl.textContent = isUs? `Subs used: ${subCountUs}` : `Opp Subs used: ${subCountOpp}`; onCourtList.innerHTML=''; benchList.innerHTML=''; const lay = isUs? layout: oppLayout; const bench = isUs? benchUs: benchOpp; let selectedZone=null; for(let z=1;z<=6;z++){ const c=chip(`${z}:${lay[z]}`, ()=>{ selectedZone=z; highlight(); }); onCourtList.appendChild(c);} bench.forEach((role,idx)=>{ const c=chip(role, ()=>{ if(selectedZone==null){ toast('Select an on‑court role first'); return; } if(role==='L'){ if(!isBackRow(selectedZone) || !(lay[selectedZone]==='MB1'||lay[selectedZone]==='MB2')){ toast('Libero can only replace a Middle in back row'); return; } }
+      const prev = lay[selectedZone]; bench[idx]=prev; lay[selectedZone]=role; if(isUs) subCountUs++; else subCountOpp++; renderSubs(isUs?'us':'opp'); }); benchList.appendChild(c); }); function highlight(){ [...onCourtList.children].forEach((el,i)=>{ el.style.outline = (i+1===selectedZone)?'2px solid #93c5fd':'none'; }); } }
+  function isBackRow(z){ return z===1||z===5||z===6; }
+
+  // ===== Boot =====
+  updateHUD(); // ensure text shows immediately
+  toast('Loaded v6 • Tap Rotate to start');
+  // Overlay starts hidden in v6, so court/tokens show immediately
+
+  function toast(msg){ toastEl.textContent=msg; toastEl.style.display='block'; clearTimeout(toastEl._t); toastEl._t=setTimeout(()=>toastEl.style.display='none',1400); }
+  function updateHUD(){ scoreEl.textContent=`Score ${score}`; levelEl.textContent=`Level ${level}`; }
+})();
+</script>
+</body>
+</html>
