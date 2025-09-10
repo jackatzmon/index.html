@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Volley Systems Trainer – 4‑2 · 5‑1 · 6‑2 (v2)</title>
+  <style>
+    :root { --bg:#0f172a; --text:#e5e7eb; --blue:#38bdf8; --blue-d:#115e7b; --green:#22c55e; --green-d:#0f6b2e; --amber:#f59e0b; --amber-d:#7c3d0a; --red:#ef4444; --red-d:#7a1620; --indigo:#6366f1; --indigo-d:#2f327a; }
+    html,body{margin:0;height:100%;background:radial-gradient(1200px 700px at 50% 0%, #0b1224, var(--bg));color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Helvetica,Arial;overscroll-behavior:none}
+    #wrap{display:grid;grid-template-rows:auto 1fr auto;min-height:100dvh}
+    header{display:flex;align-items:center;justify-content:space-between;padding:.6rem .9rem;gap:.5rem;background:linear-gradient(180deg,#0f1a33,#0b1328 40%,transparent);position:sticky;top:0;z-index:5;box-shadow:0 8px 24px rgba(0,0,0,.3);backdrop-filter:saturate(1.2) blur(6px)}
+    .title{font-weight:800;letter-spacing:.2px}
+    .badge{font-size:.72rem;padding:.25rem .5rem;border-radius:999px;background:#0b213e;border:1px solid #143257;color:#93c5fd}
+
+    #hud{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+    .pill{background:#0b213e;border:1px solid #163658;border-radius:999px;padding:.45rem .7rem;display:flex;gap:.5rem;align-items:center;font-weight:600}
+    .pill .dot{width:.6rem;height:.6rem;border-radius:50%;background:var(--blue);box-shadow:0 0 0 3px rgba(56,189,248,.15)}
+    .badgeHint{display:none;font-size:.72rem;padding:.2rem .45rem;border-radius:999px;background:#1e293b;border:1px solid #334155;color:#93c5fd;margin-left:.25rem}
+    .hintOn .badgeHint{display:inline-flex}
+
+    main#game{position:relative;display:grid;place-items:center;padding:.5rem .75rem 1rem;/* reserve space for controls: */padding-bottom:120px}
+    canvas{width:min(100vw,850px);height:calc(min(100vw,850px)*1.6);max-height:82dvh;border-radius:16px;box-shadow:0 12px 36px rgba(0,0,0,.45);background:#0a1221}
+
+    #controls{position:fixed;inset:auto 0 .5rem 0;display:flex;justify-content:center;z-index:10;pointer-events:none}
+    .bar{display:flex;gap:.5rem;pointer-events:auto;padding:.5rem;border-radius:16px;background:rgba(6,12,24,.7);backdrop-filter:blur(8px) saturate(1.1);border:1px solid rgba(92,125,175,.22);box-shadow:0 12px 36px rgba(0,0,0,.35);flex-wrap:wrap;justify-content:center}
+    .btn{user-select:none;-webkit-tap-highlight-color:transparent;cursor:pointer;border:none;border-radius:12px;padding:.7rem .9rem;font-weight:800;letter-spacing:.3px;text-transform:uppercase;font-size:.85rem;background:linear-gradient(180deg,#0f233f,#0c1a2f);color:#e5f0ff;border:1px solid #1a355b;box-shadow:inset 0 1px 0 rgba(255,255,255,.05), 0 8px 18px rgba(0,0,0,.35);transition:transform .04s ease}
+    .btn:active{transform:translateY(1px) scale(.98)}
+    .btn.blue{background:linear-gradient(180deg,#1261a8,#0f4b82);border-color:#0b3b67}
+    .btn.green{background:linear-gradient(180deg,#12883a,#0f6b2e);border-color:#0b5424}
+    .btn.amber{background:linear-gradient(180deg,#a86c12,#8b580f);border-color:#6b460b}
+    .btn.red{background:linear-gradient(180deg,#a8122a,#7d0f22);border-color:#5e0b19}
+    .btn.indigo{background:linear-gradient(180deg,#3f40a6,#2e2f7c);border-color:#23245f}
+
+    #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:6.5rem;z-index:15;display:none;background:rgba(8,18,36,.9);border:1px solid rgba(120,170,255,.35);padding:.65rem 1rem;border-radius:10px;font-weight:700;box-shadow:0 10px 24px rgba(0,0,0,.42)}
+
+    #overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:20;background:radial-gradient(700px 300px at 50% 0%, rgba(8,14,30,.85), rgba(4,8,18,.95))}
+    body.modalOpen #controls{display:none}
+    .card{width:min(92vw,800px);max-height:86dvh;overflow:auto;background:#0b172e;border:1px solid #163b6b;border-radius:18px;padding:1rem 1.1rem;box-shadow:0 14px 44px rgba(0,0,0,.55)}
+    .card h2{margin:.2rem 0 .6rem;font-size:1.4rem}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-top:.6rem}
+    .k{background:#0c1f3a;border:1px solid #18406f;padding:.7rem;border-radius:12px;font-weight:700}
+    .kbd{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;padding:.14rem .32rem;border-radius:6px;background:#0a172e;border:1px solid #213a63}
+    footer{text-align:center;font-size:.75rem;opacity:.75;padding:.6rem 0 1rem}
+
+    .systemBar{display:flex;gap:.4rem;flex-wrap:wrap}
+  </style>
+</head>
+<body>
+  <div id="wrap">
+    <header>
+      <div class="title">🏐 <b>Volley Systems Trainer</b> <span class="badge">4‑2 · 5‑1 · 6‑2</span></div>
+      <div id="hud">
+        <div class="pill"><span class="dot"></span><span id="score">Score 0</span></div>
+        <div class="pill"><span class="dot"></span><span id="level">Level 1</span></div>
+        <div class="pill"><span class="dot"></span><span id="systemLabel">System 5‑1</span><span class="badgeHint" id="hintBadge">HINT ON</span></div>
+      </div>
+    </header>
+
+    <main id="game">
+      <canvas id="cv" width="540" height="864" aria-label="Volleyball court game canvas" role="img"></canvas>
+      <div id="toast"></div>
+    </main>
+
+    <div id="controls" aria-label="Game controls">
+      <div class="bar" role="toolbar" aria-label="Trainer controls">
+        <button id="btnRotate" class="btn blue" title="Start a new rotation (advance one rotation)" aria-label="Start a new rotation (advance one rotation)">Rotate</button>
+        <button id="btnConfirm" class="btn green" title="Check your placement for this rotation" aria-label="Check your placement for this rotation">Confirm</button>
+        <button id="btnHint" class="btn amber" aria-pressed="false" title="Toggle hints (show ghost target roles)" aria-label="Toggle hints (show ghost target roles)">Hint</button>
+        <button id="btnHelp" class="btn" title="How to play and system reference" aria-label="How to play and system reference">?</button>
+        <div class="systemBar" role="group" aria-label="Choose system">
+          <button data-sys="5-1" class="btn indigo" title="Switch to 5-1 system">5‑1</button>
+          <button data-sys="4-2" class="btn indigo" title="Switch to 4-2 system">4‑2</button>
+          <button data-sys="6-2" class="btn indigo" title="Switch to 6-2 system">6‑2</button>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      1) Choose a system · 2) Tap <span class="kbd">Rotate</span> · 3) Drag roles to correct base spots · 4) Tap <span class="kbd">Confirm</span>. Use <span class="kbd">Hint</span> to see target ghosts.
+    </footer>
+  </div>
+
+  <div id="overlay" aria-modal="true" role="dialog">
+    <div class="card">
+      <h2>How this trainer works</h2>
+      <p>
+        Focus on offensive systems: <b>4‑2</b>, <b>5‑1</b>, and <b>6‑2</b>. Your tokens are labeled by <b>roles</b> (S, S1, S2, OH1, OH2, MB1, MB2, OPP, L). For each rotation, drag tokens to their correct <em>base positions</em> for the selected system and press <b>Confirm</b> before time runs out.
+      </p>
+      <div class="grid">
+        <div class="k">Correct placement: +1</div>
+        <div class="k">Wrong / Timeout: −1</div>
+        <div class="k">Speed increases each level</div>
+        <div class="k">Use <span class="kbd">Hint</span> to show ghost roles</div>
+      </div>
+      <p style="margin-top:.6rem"><b>Quick system cues:</b></p>
+      <ul>
+        <li><b>5‑1</b>: One setter (S) always sets; opposite (OPP) hits RS; two OH; one MB + Libero in back row for a middle.</li>
+        <li><b>4‑2</b>: Two setters (S1,S2). Whoever is <i>front row</i> sets; the back‑row setter plays defense/RS.</li>
+        <li><b>6‑2</b>: Two setters (S1,S2) set only from the <i>back row</i>; when front‑row they hit RS.</li>
+      </ul>
+      <div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:.8rem">
+        <button id="btnCloseHelp" class="btn green">Let's Play</button>
+        <button id="btnReset" class="btn red">Reset</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  // ------- Canvas & sizing -------
+  const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
+  function fitCanvas(){
+    const cssW = Math.min(window.innerWidth, 850);
+    const cssH = cssW * 1.6; // portrait
+    cv.style.width = cssW + 'px';
+    cv.style.height = Math.min(cssH, window.innerHeight*0.82) + 'px';
+    const w = Math.floor(cssW * dpr);
+    const h = Math.floor(cssH * dpr);
+    cv.width = w; cv.height = h; ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  fitCanvas();
+  window.addEventListener('resize', fitCanvas);
+
+  // ------- Court geometry -------
+  const court = { x: 20, y: 60, w: 500, h: 720 };
+  const zones = {
+    1: () => P(court.x + court.w*0.77, court.y + court.h*0.85),
+    2: () => P(court.x + court.w*0.50, court.y + court.h*0.85),
+    3: () => P(court.x + court.w*0.23, court.y + court.h*0.85),
+    4: () => P(court.x + court.w*0.23, court.y + court.h*0.62),
+    5: () => P(court.x + court.w*0.50, court.y + court.h*0.62),
+    6: () => P(court.x + court.w*0.77, court.y + court.h*0.62),
+  };
+  const TOKEN_R = 26;
+  function P(x,y){ return {x,y}; }
+
+  // ------- UI elements -------
+  const scoreEl = document.getElementById('score');
+  const levelEl = document.getElementById('level');
+  const systemEl = document.getElementById('systemLabel');
+  const toastEl = document.getElementById('toast');
+  const overlay = document.getElementById('overlay');
+  const btnRotate = document.getElementById('btnRotate');
+  const btnConfirm = document.getElementById('btnConfirm');
+  const btnHint = document.getElementById('btnHint');
+  const hintBadge = document.getElementById('hintBadge');
+  const btnHelp = document.getElementById('btnHelp');
+  const btnCloseHelp = document.getElementById('btnCloseHelp');
+  const btnReset = document.getElementById('btnReset');
+  document.querySelectorAll('[data-sys]').forEach(b=> b.addEventListener('click', ()=> setSystem(b.dataset.sys)));
+
+  // ------- Game State -------
+  let score=0, level=1, rotationTimer=7000, rotationQueued=false, rotationDeadline=0, hintOn=false;
+  let system = '5-1';
+  let baseLayouts = createSystemLayouts(system);
+  let rotationIndex = 0; // 0..5
+  let layout = cloneLayout(baseLayouts[rotationIndex]);
+
+  function rolesFor(system){
+    if(system==='5-1') return ['S','OPP','OH1','OH2','MB1','L'];
+    if(system==='4-2') return ['S1','S2','OH1','OH2','MB1','MB2'];
+    if(system==='6-2') return ['S1','S2','OH1','OH2','MB1','MB2'];
+    return ['S','OH1','OH2','MB1','MB2','L'];
+  }
+
+  function createSystemLayouts(sys){
+    const bySystem = {
+      '5-1': [ {1:'S', 2:'OH1',3:'MB2',4:'OH2',5:'OPP',6:'MB1'} ],
+      '4-2': [ {1:'S2',2:'OH1',3:'MB2',4:'OH2',5:'S1',6:'MB1'} ],
+      '6-2': [ {1:'S2',2:'OH1',3:'MB2',4:'OH2',5:'S1',6:'MB1'} ]
+    };
+    const arr = bySystem[sys];
+    const out = [];
+    let current = arr[0];
+    for(let i=0;i<6;i++){
+      let use = {...current};
+      if(sys==='5-1'){
+        [5,6].forEach(z=>{ if(use[z]==='MB1' || use[z]==='MB2') use[z]='L'; });
+      }
+      out.push(use);
+      current = rotateZones(current);
+    }
+    return out;
+  }
+
+  function rotateZones(zmap){ return {1:zmap[2],2:zmap[3],3:zmap[4],4:zmap[5],5:zmap[6],6:zmap[1]}; }
+  function cloneLayout(o){ return JSON.parse(JSON.stringify(o)); }
+
+  function setSystem(sys){
+    system = sys; systemEl.textContent = `System ${sys}`;
+    baseLayouts = createSystemLayouts(sys);
+    rotationIndex = 0; layout = cloneLayout(baseLayouts[rotationIndex]);
+    score=0; level=1; rotationTimer=7000; hintOn=false; rotationQueued=false; updateHUD();
+    document.getElementById('wrap').classList.toggle('hintOn', hintOn);
+    hintBadge.style.display = 'none'; btnHint.setAttribute('aria-pressed','false');
+    toast(`System ${sys}`);
+  }
+
+  // ------- Input (drag tokens) -------
+  const pointer = {x:0,y:0, id:null, dragging:null, offset:{x:0,y:0}};
+  cv.addEventListener('pointerdown', onDown);
+  window.addEventListener('pointermove', onMove);
+  window.addEventListener('pointerup', onUp);
+  window.addEventListener('pointercancel', onUp);
+
+  function getTokenAt(x,y){
+    for(let z=1; z<=6; z++){
+      const role = layout[z];
+      const p = zones[z]();
+      if(dist(x,y,p.x,p.y) <= TOKEN_R*1.2){ return {zone:z, role, p}; }
+    }
+    return null;
+  }
+  function dist(x1,y1,x2,y2){ const dx=x1-x2, dy=y1-y2; return Math.hypot(dx,dy); }
+  function findClosestZone(x,y){
+    let bestZ=1, bestD=1e9;
+    for(let z=1; z<=6; z++){
+      const p = zones[z]();
+      const d = dist(x,y,p.x,p.y);
+      if(d<bestD){ bestD=d; bestZ=z; }
+    }
+    return bestZ;
+  }
+  function onDown(e){
+    const rect = cv.getBoundingClientRect();
+    pointer.x = (e.clientX - rect.left) * (cv.width/rect.width) / dpr;
+    pointer.y = (e.clientY - rect.top) * (cv.height/rect.height) / dpr;
+    pointer.id = e.pointerId;
+    const hit = getTokenAt(pointer.x, pointer.y);
+    if(hit){
+      pointer.dragging = hit; const p = zones[hit.zone]();
+      pointer.offset.x = p.x - pointer.x; pointer.offset.y = p.y - pointer.y; e.preventDefault();
+    }
+  }
+  function onMove(e){ if(pointer.id!==e.pointerId || !pointer.dragging) return; const rect = cv.getBoundingClientRect(); pointer.x=(e.clientX-rect.left)*(cv.width/rect.width)/dpr; pointer.y=(e.clientY-rect.top)*(cv.height/rect.height)/dpr; }
+  function onUp(e){ if(pointer.id!==e.pointerId) return; if(pointer.dragging){ const targetZ = findClosestZone(pointer.x + pointer.offset.x, pointer.y + pointer.offset.y); const fromZ = pointer.dragging.zone; if(targetZ!==fromZ){ const a = layout[fromZ]; const b = layout[targetZ]; layout[fromZ]=b; layout[targetZ]=a; } } pointer.dragging=null; pointer.id=null; }
+
+  // ------- Buttons -------
+  btnRotate.addEventListener('click', queueRotation);
+  btnConfirm.addEventListener('click', confirmPlacement);
+  btnHint.addEventListener('click', ()=>{ hintOn = !hintOn; document.getElementById('wrap').classList.toggle('hintOn', hintOn); btnHint.setAttribute('aria-pressed', String(hintOn)); hintBadge.style.display = hintOn? 'inline-flex':'none'; toast(hintOn?'Hints on: ghost roles visible':'Hints off'); });
+  btnHelp.addEventListener('click', ()=> { overlay.style.display='flex'; document.body.classList.add('modalOpen'); });
+  btnCloseHelp.addEventListener('click', ()=> { overlay.style.display='none'; document.body.classList.remove('modalOpen'); });
+  btnReset.addEventListener('click', ()=>{ setSystem(system); overlay.style.display='none'; document.body.classList.remove('modalOpen'); });
+
+  function queueRotation(){
+    if(rotationQueued) return;
+    rotationQueued = true; rotationDeadline = performance.now() + rotationTimer; toast('Rotate: arrange roles for new rotation');
+  }
+
+  function confirmPlacement(){
+    if(!rotationQueued){ toast('Tap Rotate first.'); return; }
+    const target = baseLayouts[rotationIndex];
+    const ok = equalLayouts(layout, target);
+    if(ok){ score+=1; SFX.ok(); levelUp(); toast('Correct +1'); rotationQueued=false; }
+    else { score-=1; SFX.bad(); toast('Not quite −1'); rotationQueued=false; layout = cloneLayout(target); }
+    updateHUD();
+  }
+
+  function equalLayouts(a,b){ for(let z=1;z<=6;z++){ if(a[z]!==b[z]) return false; } return true; }
+  function levelUp(){ level+=1; rotationTimer = Math.max(2200, Math.floor(rotationTimer*0.92)); rotationIndex = (rotationIndex + 1) % 6; layout = cloneLayout(baseLayouts[rotationIndex]); }
+  function updateHUD(){ scoreEl.textContent = `Score ${score}`; levelEl.textContent = `Level ${level}`; }
+
+  // ------- Draw helpers -------
+  function drawCourt(){
+    roundRect(ctx, court.x-8, court.y-8, court.w+16, court.h+16, 16, '#071123', '#192b4a');
+    roundRect(ctx, court.x, court.y, court.w, court.h, 12, '#143259', '#23518e');
+    fillRect(ctx, court.x, court.y, court.w, court.h/2, '#1a3a6a');
+    fillRect(ctx, court.x, court.y+court.h/2, court.w, court.h/2, '#22467f');
+    line(ctx, court.x, court.y + court.h*0.25, court.x+court.w, court.y + court.h*0.25, '#7fb1ff88', 2);
+    line(ctx, court.x, court.y + court.h*0.75, court.x+court.w, court.y + court.h*0.75, '#7fb1ff88', 2);
+    line(ctx, court.x, court.y + court.h/2, court.x+court.w, court.y + court.h/2, '#dbe7ff', 3.5);
+  }
+  function drawTeams(now){
+    // Show target ghosts whenever Hints are ON
+    if(hintOn){
+      const tgt = baseLayouts[rotationIndex];
+      for(let z=1; z<=6; z++){
+        const p = zones[z](); drawGhost(p.x, p.y, tgt[z]);
+      }
+    }
+    // tokens
+    for(let z=1; z<=6; z++){
+      let p = zones[z]();
+      if(pointer.dragging && pointer.dragging.zone===z){ p = { x: pointer.x + pointer.offset.x, y: pointer.y + pointer.offset.y }; }
+      const role = layout[z]; const color = colorFor(role);
+      drawToken(p.x, p.y, role, color.fill, color.stroke);
+    }
+    // countdown
+    if(rotationQueued){ const left = Math.max(0, rotationDeadline - performance.now()); const pct = left/rotationTimer; drawRing(court.x+court.w-44, court.y+court.h-44, 22, '#93c5fd', pct); if(left<=0){ rotationQueued=false; score-=1; SFX.bad(); toast('Timeout −1'); updateHUD(); layout = cloneLayout(baseLayouts[rotationIndex]); } }
+  }
+
+  function colorFor(role){
+    if(role==='S' || role==='S1' || role==='S2') return {fill:var('--blue','#38bdf8'), stroke:var('--blue-d','#115e7b')};
+    if(role.startsWith('OH')) return {fill:var('--green','#22c55e'), stroke:var('--green-d','#0f6b2e')};
+    if(role.startsWith('MB')) return {fill:var('--amber','#f59e0b'), stroke:var('--amber-d','#7c3d0a')};
+    if(role==='OPP') return {fill:var('--indigo','#6366f1'), stroke:var('--indigo-d','#2f327a')};
+    if(role==='L') return {fill:var('--red','#ef4444'), stroke:var('--red-d','#7a1620')};
+    return {fill:'#e5e7eb', stroke:'#64748b'};
+  }
+  function var(name, fallback){ return getComputedStyle(document.documentElement).getPropertyValue(name) || fallback; }
+
+  function drawToken(x,y,label, fill, stroke){
+    ctx.save();
+    radialGlow(x,y, 22, fill);
+    ctx.beginPath(); ctx.arc(x,y, TOKEN_R, 0, Math.PI*2); ctx.fillStyle=fill; ctx.fill(); ctx.lineWidth=4; ctx.strokeStyle=stroke; ctx.stroke();
+    ctx.fillStyle = '#07111f'; ctx.font='bold 16px system-ui,-apple-system,Segoe UI,Roboto'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(label, x, y);
+    ctx.restore();
+  }
+  function drawGhost(x,y,text){ ctx.save(); ctx.globalAlpha=.25; ctx.beginPath(); ctx.arc(x,y, TOKEN_R, 0, Math.PI*2); ctx.fillStyle='#e5f0ff'; ctx.fill(); ctx.globalAlpha=.9; ctx.fillStyle='#07111f'; ctx.font='bold 14px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(text, x, y); ctx.restore(); }
+  function drawRing(x,y,r,color,pct){ ctx.save(); ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.strokeStyle='#0a1a33'; ctx.lineWidth=6; ctx.stroke(); ctx.beginPath(); ctx.arc(x,y,r, -Math.PI/2, -Math.PI/2 + Math.PI*2*pct); ctx.strokeStyle=color; ctx.lineWidth=6; ctx.stroke(); ctx.restore(); }
+  function radialGlow(x,y,r,color){ const g = ctx.createRadialGradient(x,y,2, x,y,r*2); g.addColorStop(0, color+'33'); g.addColorStop(1,'transparent'); ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,r*2.1,0,Math.PI*2); ctx.fill(); }
+  function roundRect(ctx,x,y,w,h,r, fill, stroke){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); if(fill){ ctx.fillStyle=fill; ctx.fill(); } if(stroke){ ctx.strokeStyle=stroke; ctx.lineWidth=2; ctx.stroke(); } }
+  function line(ctx,x1,y1,x2,y2,color,w=1){ ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.strokeStyle=color; ctx.lineWidth=w; ctx.stroke(); }
+  function fillRect(ctx,x,y,w,h,color){ ctx.fillStyle=color; ctx.fillRect(x,y,w,h); }
+
+  // ------- SFX -------
+  const SFX = { ok: beep(300,520), bad: beep(160,120) };
+  function beep(a,b){ const actx = new (window.AudioContext||window.webkitAudioContext)(); return ()=>{ const t0=actx.currentTime; const o=actx.createOscillator(); const g=actx.createGain(); o.connect(g).connect(actx.destination); o.type='sine'; g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(0.05,t0+0.02); g.gain.exponentialRampToValueAtTime(0.00001,t0+0.22); o.frequency.setValueAtTime(a,t0); o.frequency.linearRampToValueAtTime(b,t0+0.2); o.start(t0); o.stop(t0+0.25); }; }
+
+  // ------- Loop -------
+  function tick(){ ctx.clearRect(0,0,cv.width,cv.height); drawCourt(); drawTeams(performance.now()); requestAnimationFrame(tick); }
+  requestAnimationFrame(tick);
+
+  // ------- Boot -------
+  overlay.style.display='flex'; document.body.classList.add('modalOpen');
+  updateHUD();
+  setSystem('5-1');
+})();
+</script>
+</body>
+</html>
